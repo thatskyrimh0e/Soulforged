@@ -1,0 +1,9 @@
+PySide6>=6.6.0
+
+# Needed only if you use core/bsa_reader.py (reading files packed inside
+# a .bsa -- SSE archives use LZ4 frame compression, not zlib).
+lz4>=4.0.0
+
+# Only needed to build the standalone .exe (build_exe.bat) -- not required
+# to run "python main.py" from source.
+pyinstaller>=6.0.0

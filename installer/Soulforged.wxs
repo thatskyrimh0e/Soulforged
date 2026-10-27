@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WiX v5 source for Soulforged -- produces a real .msi (unlike the Inno
+  Setup script, which produces a .exe installer). Built by build_msi.bat
+  via the `wix` CLI; you shouldn't need to invoke it by hand.
+
+  UpgradeCode is fixed so re-running a newer-version build upgrades the
+  existing install in place instead of creating a second copy. It is a
+  DIFFERENT guid from the Inno Setup AppId on purpose -- the two installer
+  types don't recognize each other's installs, so pick one going forward
+  rather than switching back and forth, or uninstall the old one by hand
+  the first time you switch.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package name="Soulforged"
+           manufacturer="Soulforged"
+           version="1.0.0"
+           upgradeCode="9C3E5A2D-1B6F-4A8C-B7D0-3E9F2A6C5D18"
+           compressed="yes"
+           scope="perMachine">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Soulforged is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="AppIcon.ico" SourceFile="..\assets\app_icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Soulforged" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppProgramMenuFolder" Name="Soulforged" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <!-- Pulls in every file PyInstaller produced under dist\Soulforged,
+         one Component per file, without hand-listing them (the modern
+         WiX replacement for the old heat.exe harvester). Pass the real
+         path at build time with -d SourceDir=dist\Soulforged. -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.SourceDir)\**" />
+    </ComponentGroup>
+
+    <Component Id="StartMenuShortcut" Directory="AppProgramMenuFolder" Guid="*">
+      <Shortcut Id="StartMenuShortcutFile"
+                Name="Soulforged"
+                Target="[INSTALLFOLDER]Soulforged.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon.ico" />
+      <Shortcut Id="UninstallShortcutFile"
+                Name="Uninstall Soulforged"
+                Target="[System64Folder]msiexec.exe"
+                Arguments="/x [ProductCode]" />
+      <RemoveFolder Id="RemoveAppProgramMenuFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\Soulforged" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="*">
+      <Shortcut Id="DesktopShortcutFile"
+                Name="Soulforged"
+                Target="[INSTALLFOLDER]Soulforged.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon.ico" />
+      <RegistryValue Root="HKCU" Key="Software\Soulforged" Name="desktop_shortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Feature Id="MainFeature" Title="Soulforged" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+  </Package>
+</Wix>
